@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  user_id       Int       @id @default(autoincrement())
+  username      String    @unique @db.VarChar(50)
+  email         String    @unique
+  password_hash String    @db.VarChar(255)
+  is_verified   Boolean   @default(false)
+  lastLogin     DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  UserProfile UserProfile?
+  Comment     Comment[]
+  Post        Post[]
+}
+
+model UserProfile {
+  user_profile_id Int       @id @default(autoincrement())
+  avatar          String?
+  first_name      String?   @db.VarChar(50)
+  last_name       String?   @db.VarChar(50)
+  birthday        DateTime? @db.DateTime()
+  gender          Gender    @default(female)
+  phone           String?   @db.VarChar(10)
+  description     String?   @db.Text
+  created_at      DateTime  @default(now())
+  updated_at      DateTime? @updatedAt
+  user_id         Int       @unique
+
+  Users Users @relation(fields: [user_id], references: [user_id])
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+model Post {
+  id      Int       @id @default(autoincrement())
+  title   String
+  content String
+  user    Users     @relation(fields: [user_id], references: [user_id])
+  user_id Int
+  Comment Comment[]
+
+  @@index([user_id])
+}
+
+model Comment {
+  id         Int       @id @default(autoincrement())
+  content    String
+  post       Post      @relation(fields: [post_id], references: [id])
+  post_id    Int
+  user       Users     @relation(fields: [user_id], references: [user_id])
+  user_id    Int
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt
+
+  @@index([post_id, user_id])
+}
